@@ -537,10 +537,16 @@ CouchDBConnection.prototype._ensureIndex = function (collectionName, indexdef,
   // so we don't interact with the write fence.
   var db = self._getCollection(collectionName);
   var future = new Future;
+  var idx;
   if (indexdef.constructor === Array )
-    var idx = {index: {fields: indexdef} };
-  else
-    var idx = {index: {fields: [indexdef]} };
+    idx = {index: {fields: indexdef} };
+  else {
+    //mario - to allow text indexes etc, allow full indexDef through
+    if ( _.has(indexdef,'index') )
+      idx = indexdef;
+    else
+      idx = {index: {fields: [indexdef]} };
+  }
   db.index(idx, future.resolver());
   future.wait();
 };
