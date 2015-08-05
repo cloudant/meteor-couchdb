@@ -92,11 +92,11 @@ Tasks.allow({
 })
 ```  
 
-## API  Reference  
+## API Reference  
 
 * [CouchDB.Database](#couchdb-database)  
 	- [database.find](#database-find-selector-options)  
-	- [database.findOne](#database-findone-selector-options)  
+	- [database.findOne](#databasefindoneselectoroptions)  
 	- [database.insert](#database-insert-doc-callback)  
 	- [database.update](#database-update-doc-options-callback)  
 	- [database.upsert](#database-upsert-doc-callback)  
