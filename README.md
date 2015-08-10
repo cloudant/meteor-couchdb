@@ -310,7 +310,10 @@ Delete the document whose _id matches the specified value them from the database
 
   options
     insert, update, remove Function
-      Functions that look at a proposed modification to the database and return true if it should be allowed.
+      Functions that look at a proposed modification to the database and return true if it should be allowed.  
+    fetch Array of Strings  
+      Optional performance enhancement. Limits the fields that will be fetched from the database for inspection by your update and remove functions.
+     
 ```  
 When a client calls insert, update, or remove on a database, the database's allow and deny callbacks are called on the server to determine if the write should be allowed. If at least one allow callback allows the write, and no deny callbacks deny the write, then the write is allowed to proceed.
 
@@ -323,8 +326,9 @@ The available callbacks are:
 - insert(userId, doc)  
   The user userId wants to insert the document doc into the database. Return true if this should be allowed. doc will contain the _id field if one was explicitly set by the client. You can use this to prevent users from specifying arbitrary _id fields.
 
-- update(userId, doc, fieldNames)
-  The user userId wants to update a document doc. (doc is the current version of the document from the database, without the proposed update.) Return true to permit the change. fieldNames is an array of the (top-level) fields in doc that the client wants to modify, for example ['name', 'score'].
+- update(userId, doc, modifiedDoc)
+  The user userId wants to update a document doc. (doc is the current version of the document from the database, without the proposed update.) Return true to permit the change. 
+  modifiedDoc is the doc submitted by the user.
 
 - remove(userId, doc)
   The user userId wants to remove doc from the database. Return true to permit this.

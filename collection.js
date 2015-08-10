@@ -64,7 +64,8 @@ CouchDB.Database = function (name, options) {
   //  break;
   //}
 
-  self._transform = LocalCollection.wrapTransform(options.transform);
+  //mario transforms not supported
+  self._transform = LocalCollection.wrapTransform(null);
 
   if (! name || options.connection === null)
     // note: nameless collections never have a connection
@@ -371,13 +372,12 @@ var convertRegexpToCouchDBSelector = function (regexp) {
 };
 
 var throwIfSelectorIsNotId = function (selector, methodName) {
-  /*if (!LocalCollection._selectorIsIdPerhapsAsObject(selector)) {
+  if (!LocalCollection._selectorIsIdPerhapsAsObject(selector)) {
     throw new Meteor.Error(
       403, "Not permitted. Untrusted code may only " + methodName +
         " documents by ID.");
-   }*/
-   //mario for couch, we need the _id and _rev, so let this go through
-  
+   }
+     
 };
 
 
@@ -526,7 +526,8 @@ _.each(["insert", "update", "remove"], function (name) {
         // If we're about to actually send an RPC, we should throw an error if
         // this is a non-ID selector, because the mutation methods only allow
         // single-ID selectors. (If we don't throw here, we'll see flicker.)
-        throwIfSelectorIsNotId(args[0], name);
+        if (name === "remove") // mario since update for couch does not support $set
+          throwIfSelectorIsNotId(args[0], name);
       }
 
       ret = chooseReturnValueFromCollectionResult(
@@ -652,7 +653,7 @@ CouchDB.Database.ObjectID = CouchDB.ObjectID;
 (function () {
   var addValidator = function(allowOrDeny, options) {
     // validate keys
-    var VALID_KEYS = ['insert', 'update', 'remove', 'fetch', 'transform'];
+    var VALID_KEYS = ['insert', 'update', 'remove', 'fetch' ];
     _.each(_.keys(options), function (key) {
       if (!_.contains(VALID_KEYS, key))
         throw new Error(allowOrDeny + ": Invalid key: " + key);
@@ -670,12 +671,14 @@ CouchDB.Database.ObjectID = CouchDB.ObjectID;
         // If the transform is specified at all (including as 'null') in this
         // call, then take that; otherwise, take the transform from the
         // collection.
-        if (options.transform === undefined) {
+        // mario - not supported yet
+       /* if (options.transform === undefined) {
           options[name].transform = self._transform;  // already wrapped
         } else {
           options[name].transform = LocalCollection.wrapTransform(
             options.transform);
-        }
+        }*/
+        options[name].transform = self._transform;
 
         self._validators[name][allowOrDeny].push(options[name]);
       }
@@ -784,8 +787,10 @@ CouchDB.Database.prototype._defineMutationMethods = function() {
 
           // We don't allow arbitrary selectors in mutations from the client: only
           // single-ID selectors.
-          if (method !== 'insert')
-            throwIfSelectorIsNotId(args[0], method);
+          if (method !== 'insert') {
+            if (method === "remove") // mario since update for couch does not support $set
+              throwIfSelectorIsNotId(args[0], method);
+          }
 
           if (self._restricted) {
             // short circuit if there is no way it will pass.
@@ -862,7 +867,8 @@ CouchDB.Database.prototype._isInsecure = function () {
 
 var docToValidate = function (validator, doc, generatedId) {
   var ret = doc;
-  if (validator.transform) {
+  // mario transforms not supported
+  /*if (validator.transform) {
     ret = EJSON.clone(doc);
     // If you set a server-side transform on your collection, then you don't get
     // to tell the difference between "client specified the ID" and "server
@@ -873,7 +879,7 @@ var docToValidate = function (validator, doc, generatedId) {
       ret._id = generatedId;
     }
     ret = validator.transform(ret);
-  }
+  }*/
   return ret;
 };
 
@@ -914,16 +920,19 @@ var transformDoc = function (validator, doc) {
 // pass, rewrite the couchDB operation to use $in to set the list of
 // document ids to change ##ValidatedChange
 CouchDB.Database.prototype._validatedUpdate = function(
-    userId, selector, mutator, options) {
+    userId, selector,  options) {
   var self = this;
-
-  check(mutator, Object);
 
   options = _.clone(options) || {};
 
+  // mario - today the exposed update API with couchDB is ONLY a replace
+  // we can make it a idSelector + modifier using updateHandler
+  // so a futur consideration
+  /*
   if (!LocalCollection._selectorIsIdPerhapsAsObject(selector))
     throw new Error("validated update should be of a single ID");
-
+  */
+  
   // We don't support upserts because they don't fit nicely into allow/deny
   // rules.
   if (options.upsert)
@@ -935,7 +944,8 @@ CouchDB.Database.prototype._validatedUpdate = function(
 
   // compute modified fields
   var fields = [];
-  if (_.isEmpty(mutator)) {
+  // see earlier comment of exposed couchDB update API
+  /*if (_.isEmpty(mutator)) {
     throw new Meteor.Error(403, noReplaceError);
   }
   _.each(mutator, function (params, op) {
@@ -957,18 +967,16 @@ CouchDB.Database.prototype._validatedUpdate = function(
       });
     }
   });
+  */
 
   var findOptions = {transform: null};
   if (!self._validators.fetchAllFields) {
-    findOptions.fields = {};
-    _.each(self._validators.fetch, function(fieldName) {
-      findOptions.fields[fieldName] = 1;
-    });
+    findOptions.fields = self._validators.fetch; // couchDB query fields is a array only
   }
 
-  var doc = self._collection.findOne(selector, findOptions);
+  var doc = self._collection.findOne(selector._id, findOptions);
   if (!doc)  // none satisfied!
-    return 0;
+    return 0; // this is too silent an error
 
   // call user validators.
   // Any deny returns true means denied.
@@ -976,8 +984,7 @@ CouchDB.Database.prototype._validatedUpdate = function(
     var factoriedDoc = transformDoc(validator, doc);
     return validator(userId,
                      factoriedDoc,
-                     fields,
-                     mutator);
+                     selector); // mario see earlier comment - for now selector is whole doc
   })) {
     throw new Meteor.Error(403, "Access denied");
   }
@@ -986,16 +993,14 @@ CouchDB.Database.prototype._validatedUpdate = function(
     var factoriedDoc = transformDoc(validator, doc);
     return !validator(userId,
                       factoriedDoc,
-                      fields,
-                      mutator);
+                      selector);
   })) {
     throw new Meteor.Error(403, "Access denied");
   }
-
   options._forbidReplace = true;
 
   return self._collection.update.call(
-    self._collection, selector, mutator, options);
+    self._collection, selector,  options);
 };
 
 // Only allow these operations in validated updates. Specifically
@@ -1015,10 +1020,7 @@ CouchDB.Database.prototype._validatedRemove = function(userId, selector) {
 
   var findOptions = {transform: null};
   if (!self._validators.fetchAllFields) {
-    findOptions.fields = {};
-    _.each(self._validators.fetch, function(fieldName) {
-      findOptions.fields[fieldName] = 1;
-    });
+    findOptions.fields = self._validators.fetch;
   }
 
   var doc = self._collection.findOne(selector, findOptions);

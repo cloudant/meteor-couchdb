@@ -66,7 +66,7 @@ Package.onTest(function(api) {
   api.use('cloudant:couchdb');
   api.use(['tinytest', 'underscore', 'test-helpers', 'ejson', 'random',
            'ddp', 'base64']);
-  //api.addFiles('allow_tests.js', ['client', 'server']); test cases still need conversion to couchdb
+  api.addFiles('allow_tests.js', ['client', 'server']);
   api.addFiles('doc_fetcher_tests.js', 'server');
   api.addFiles('collection_tests.js', ['client', 'server']);
   api.addFiles('oplog_tests.js', 'server');
