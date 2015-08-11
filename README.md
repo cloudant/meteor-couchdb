@@ -1,15 +1,15 @@
 # couchdb
 
 The `couchdb` package is a Meteor package available on
-[Atmosphere](https://atmospherejs.com/cloudant/couchdb). The package is [full stack database
+[Atmosphere](https://atmospherejs.com/cloudant/couchdb). The package is a [full stack database
 driver](https://www.meteor.com/full-stack-db-drivers) that provides
-functionality to work with Apache CouchDB in Meteor.  
+functionality to work with [Apache CouchDB](http://couchdb.apache.org/) in Meteor.  
 
 It provides:  
 
 - an efficient [Livequery](https://www.meteor.com/livequery) implementation providing real-time
   updates from the database by consuming the CouchDB _changes feed
-- DDP RPC end-points for updating the data from clients connected over the wire
+- Distributed Data Protocol (DDP) RPC end-points for updating the data from clients connected over the wire
 - Serialization and deserialization of updates to the DDP format
 
 This Readme covers the following
