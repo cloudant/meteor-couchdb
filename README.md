@@ -180,27 +180,31 @@ If you pass null as the name, then you're creating a local database. It's not sy
   
   
 ### database.find([selector],[options])
-  
 
-Find the documents in a database that match the selector.
+```  
+  Find the documents in a database that match the selector.
 
-> Arguments  
->>selector : [Cloudant Selector](#selectors),  or String  
->>>A query describing the documents to find
+  Arguments
+    selector : Selector specifier,  or String
+      A query describing the documents to find.
 
->>options
->>>sort [Cloudant Sort](#sort-specifiers) Specifier
->>>>Sort order 
+    options
+      sort Sort specifier
+        Sort order
 
->>> skip Number
->>>>Number of results to skip at the beginning
-
->>>limit Number
->>>>Maximum number of results to return
-
->>>fields : [Cloudant Field](#field-specifiers) Specifier
->>>>fields to return.  
- 
+    skip Number
+        Number of results to skip at the beginning
+    
+    limit Number
+        Maximum number of results to return
+        
+    fields :  Field specifier
+        fields to return  
+        
+```    
+ [Selector specifier](#selectors)
+ [Sort specifier](#sort-specifiers)
+ [Field specifier](#field-specifiers)
 
 find returns a cursor. It does not immediately access the database or return documents. Cursors provide fetch to return all matching documents, map and forEach to iterate over all matching documents, and observe and observeChanges to register callbacks when the set of matching documents changes.
 
@@ -208,24 +212,31 @@ Cursors are not query snapshots. Cursors are a reactive data source. Any change 
 
 ### database.findOne([selector],[options])  
 
+
+```  
   Finds the first document that matches the selector, as ordered by sort and skip options.
 
-> Arguments  
->>selector : [Cloudant Selector](#selectors),  or String  
->>>A query describing the documents to find
+  Arguments
+    selector : Selector specifier,  or String
+      A query describing the documents to find.
 
->>Options
->>>sort [Cloudant Sort](#sort-specifiers) Specifier
->>>>Sort order 
+    options
+      sort Sort Specifier
+        Sort order
 
->>> skip Number
->>>>Number of results to skip at the beginning
-
->>>limit Number
->>>>Maximum number of results to return
-
->>>fields : [Cloudant Field](#field-specifiers) Specifier
->>>>fields to return.  
+    skip Number
+        Number of results to skip at the beginning
+    
+    limit Number
+        Maximum number of results to return
+        
+    fields : Field specifier
+        fields to return  
+        
+```    
+ [Selector specifier](#selectors)
+ [Sort specifier](#sort-specifiers)
+ [Field specifier](#field-specifiers)
 
 Equivalent to find(selector, options).fetch()[0] with options.limit = 1.
 
@@ -249,7 +260,7 @@ insert will generate a unique ID for the object you pass, insert it in the datab
 ### database.update(doc,[options],[callback])  
 
 ```  
-  Modify a document in the database. Returns 1 if document updated, 0 if not.
+  Replace a document in the database. Returns 1 if document updated, 0 if not.
 
   Arguments
     doc JSON document with _id field
@@ -488,23 +499,6 @@ See the [complete documentation](https://docs.cloudant.com/cloudant_query.html#f
 
 # License
 
-Copyright (c) 2015 IBM Corporation
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the Software
-is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
-PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT 
-HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+See [LICENSE.txt](./LICENSE.txt)
 
    
