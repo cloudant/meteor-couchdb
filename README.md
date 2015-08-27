@@ -505,5 +505,6 @@ See [LICENSE.txt](./LICENSE.txt)
 
 
 # Samples
-[Simple-todos](https://github.com/mariobriggs/simple-todos)
-[LocalMarket](https://github.com/mariobriggs/localmarket)   
+[Simple-todos](https://github.com/mariobriggs/simple-todos)  
+[LocalMarket](https://github.com/mariobriggs/localmarket)  
+
