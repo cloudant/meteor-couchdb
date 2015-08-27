@@ -17,6 +17,8 @@ This Readme covers the following
 * [Installation and Usage](#installation)
 * [API Reference](#api-reference)
 * [License](#license)
+* [Samples](#samples)
+
 
 
 ## Installation
@@ -501,4 +503,7 @@ See the [complete documentation](https://docs.cloudant.com/cloudant_query.html#f
 
 See [LICENSE.txt](./LICENSE.txt)
 
-   
+
+# Samples
+[Simple-todos](https://github.com/mariobriggs/simple-todos)
+[LocalMarket](https://github.com/mariobriggs/localmarket)   
