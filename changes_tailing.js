@@ -268,7 +268,7 @@ _.extend(ChangesFeedHandle.prototype, {
           } else {
            
             // All other ops have an id.
-            trigger.id = idForOp(doc); //mario
+            trigger.id = idForOp(doc); 
           }
 
           self._crossbar.fire(trigger);

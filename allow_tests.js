@@ -152,7 +152,7 @@ if (Meteor.isServer) {
           return doc.canInsert2;
         },
         update: function(userId, doc, fields, modifier) {
-          return -1 !== _.indexOf(fields, 'canUpdate2');   // mario comeback here.
+          return -1 !== _.indexOf(fields, 'canUpdate2');   
         },
         remove: function(userId, doc) {
           return doc.canRemove2;

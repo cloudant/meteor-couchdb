@@ -63,21 +63,21 @@ var replaceNames = function (filter, thing) {
 var makeCouchDbLegal = function (name) { return "EJSON" + name; };
 var unmakeCouchDbLegal = function (name) { return name.substr(5); };
 
+// EJSON support needs to be looked into
 var replaceCouchDBAtomWithMeteor = function (document) {
-   // mdb revisit this should be simple with nano
+   
   
   if (document["EJSON$type"] && document["EJSON$value"]
       && _.size(document) === 2) {
     return EJSON.fromJSONValue(replaceNames(unmakeCouchDbLegal, document));
   }
-  // mdb revisit
+  
  
   return undefined;
 };
 
 var replaceMeteorAtomWithCouchDB = function (document) {
- /* mario revisit. this should be simple with nano
- */
+ 
   if (EJSON._isCustomType(document)) {
     return replaceNames(makeCouchDbLegal, EJSON.toJSONValue(document));
   }
@@ -141,7 +141,7 @@ CouchDBConnection = function (url, options) {
   self.cloudant = connectFuture.wait();
   
   if (options.global === true ) {
-    //mario in couch, we need a separate changesListener per database.
+    //in couch, we need a separate changesListener per database.
     // so moved this into the driver.open() method
     //self._changesfeedHandle = new ChangesFeedHandle( url,  process.env.COUCHDB_DBNAME); 
     self._docFetcher = new DocFetcher(self);

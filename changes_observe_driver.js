@@ -61,7 +61,6 @@ ChangesObserveDriver = function (options) {
 
   if (options.ordered) {
     throw Error("OplogObserveDriver only supports unordered observeChanges");
-  	//mario commented out for test cases
   }
 
   var sorter = options.sorter;
@@ -604,7 +603,6 @@ _.extend(ChangesObserveDriver.prototype, {
 
         // XXX what if selector yields?  for now it can't but later it could
         // have $where
-        // mario comment out temp
         if (self._matcher.documentMatches(op.o).result)
           self._addMatching(op.o);
       } else if (op.op === 'u') {
