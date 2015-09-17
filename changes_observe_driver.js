@@ -292,7 +292,7 @@ _.extend(ChangesObserveDriver.prototype, {
     var self = this;
     Meteor._noYieldsAllowed(function () {
       self._published.set(id, self._sharedProjectionFn(newDoc));
-      var changed = LocalCollection._makeChangedFields(_.clone(newDoc), oldDoc);
+      var changed = DiffSequence.makeChangedFields(_.clone(newDoc), oldDoc);
       changed = self._projectionFn(changed);
       if (!_.isEmpty(changed))
         self._multiplexer.changed(id, changed);

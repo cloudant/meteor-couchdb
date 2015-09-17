@@ -24,7 +24,7 @@
 
 Package.describe({
   name: 'cloudant:couchdb',
-  version: '0.0.1',
+  version: '0.0.2',
   // Brief, one-line summary of the package.
   summary: 'Full stack database driver for CouchDB/Cloudant in Meteor',
   // URL to the Git repository containing the source code for this package.
@@ -43,7 +43,7 @@ Npm.depends({
 
 Package.onUse(function(api) {
 api.use(['random', 'ejson', 'json', 'underscore',  'minimongo', 'logging', 
-           'ddp', 'tracker'],
+           'ddp', 'tracker', 'diff-sequence', 'mongo-id'],
           ['client', 'server']);
           
   api.use('check', ['client', 'server']);
@@ -87,6 +87,7 @@ api.use(['random', 'ejson', 'json', 'underscore',  'minimongo', 'logging',
 
 Package.onTest(function(api) {
   api.use('tinytest');
+  api.use('check');
   api.use('cloudant:couchdb');
   api.use(['tinytest', 'underscore', 'test-helpers', 'ejson', 'random',
            'ddp', 'base64']);

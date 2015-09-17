@@ -150,7 +150,7 @@ CouchDB.Database = function (name, options) {
       // Apply an update.
       // XXX better specify this interface (not in terms of a wire message)?
       update: function (msg) {
-        var couchId = LocalCollection._idParse(msg.id);
+        var couchId = MongoID.idParse(msg.id);
         var doc = self._collection.findOne(couchId);
 
         // Is this a "replace the whole doc" message coming from the quiescence
@@ -622,7 +622,7 @@ CouchDB.Database.prototype._dropIndex = function (index) {
  * @class
  * @param {String} hexString Optional.  The 24-character hexadecimal contents of the ObjectID to create
  */
-CouchDB.ObjectID = LocalCollection._ObjectID;
+CouchDB.ObjectID = MongoID.ObjectID;
 
 /**
  * @summary To create a cursor, use find. To access the documents in a cursor, use forEach, map, or fetch.
@@ -639,7 +639,7 @@ CouchDB.Database.Cursor = CouchDB.Cursor;
 /**
  * @deprecated in 0.9.1
  */
-CouchDB.Database.ObjectID = CouchDB.ObjectID;
+CouchDB.Database.ObjectID = MongoID.ObjectID;
 ///
 /// Remote methods and access control.
 ///
