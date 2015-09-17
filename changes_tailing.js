@@ -157,7 +157,7 @@ _.extend(ChangesFeedHandle.prototype, {
     }
     
     var key = notification._id + ' ' + notification._rev;
-    if ( self._tooFastKeys.get(key) ) {
+    if ( self._tooFastKeys.delete(key) ) { //changed to delete from get, since 1.2 onFireBefore
       return; // _changes went before us
     }
     
