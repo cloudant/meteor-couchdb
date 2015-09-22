@@ -43,7 +43,7 @@ Npm.depends({
 
 Package.onUse(function(api) {
   api.versionsFrom('1.2');
-  api.use(['random', 'ejson', 'json', 'underscore',  'minimongo', 'logging', 
+  api.use(['random', 'ejson',  'underscore',  'minimongo', 'logging', 
            'ddp', 'tracker', 'diff-sequence', 'mongo-id'],
           ['client', 'server']);
           
