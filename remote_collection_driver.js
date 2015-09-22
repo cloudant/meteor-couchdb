@@ -62,8 +62,15 @@ CouchDBInternals.defaultRemoteCollectionDriver = _.once(function () {
   var couchdbUrl = process.env.COUCHDB_URL;
   connectionOptions.global = true;
 
-  if (! couchdbUrl)
+  if (! couchdbUrl) {
+    if (process.env.VCAP_SERVICES) { // check if on bluemix
+      var vcap = JSON.parse(process.env.VCAP_SERVICES);
+      if (vcap.cloudantNoSQLDB) {
+        var couchdbUrl=vcap.cloudantNoSQLDB[0].credentials.url;
+      }
+    }
     throw new Error("COUCHDB_URL must be set in environment");
+  }
 
   return new CouchDBInternals.RemoteCollectionDriver(couchdbUrl, connectionOptions);
 });
