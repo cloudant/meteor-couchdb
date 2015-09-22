@@ -168,7 +168,7 @@ CouchDBConnection.prototype.close = function() {
   Future.wrap(_.bind(self.db.close, self.db))(true).wait();
 };*/
 
-// Returns the CouchDB Database object; may yield. <Praveen, need to verify>
+// Returns the CouchDB Database object; may yield. 
 CouchDBConnection.prototype._getCollection = function (collectionName) {
   var self = this;
 
@@ -232,14 +232,23 @@ var writeCallback = function (write, refresh, doc, callback, isUpdHandler) {
     if (! err) {
       // XXX We don't have to run this on error, right?
       var ts = new Date().getTime();
-      if (typeof isUpdHandler != 'undefined' )	{
-        var refreshDoc =  {id: doc._id, rev : header['x-couch-update-newrev'], _clientTs: ts};
-      	refresh(refreshDoc);
-      }
-      else {
-        var temp = _.clone(result);
-        temp._clientTs = ts;
-    	  refresh(temp); //mario change for waitUntilCaughtup
+      try {
+        if (typeof isUpdHandler != 'undefined' )	{
+          var refreshDoc =  {id: doc._id, rev : header['x-couch-update-newrev'], _clientTs: ts};
+      	  refresh(refreshDoc);
+        }
+        else {
+          var temp = _.clone(result);
+          temp._clientTs = ts;
+    	    refresh(temp); //mario change for waitUntilCaughtup
+        }
+      } catch (refreshErr) {
+        if (callback) {
+          callback(refreshErr);
+          return;
+        } else {
+          throw refreshErr;
+        }
       }
     }
     write.committed();
@@ -408,7 +417,7 @@ CouchDBConnection.prototype._update = function (collection_name, selector,
       //     https://github.com/meteor/meteor/issues/2278#issuecomment-64252706
       self.cloudant.request(
               { db: collection_name,
-                path: '_design/meteor/_update/upsert/' + couchDBSelector._id,
+                path: '_design/meteor/_update/upsert/' + encodeURIComponent(couchDBSelector._id),
                 method: 'PUT',
                 content_type: 'Content-Type:application/json',
                 body: couchDBSelector
@@ -428,7 +437,7 @@ CouchDBConnection.prototype._update = function (collection_name, selector,
       }
       self.cloudant.request(
         { db: collection_name,
-          path:  updHandlerFunc + couchDBSelector._id,
+          path:  updHandlerFunc + encodeURIComponent(couchDBSelector._id),
           method: 'PUT',
           content_type: 'Content-Type:application/json',
           body: couchDBSelector

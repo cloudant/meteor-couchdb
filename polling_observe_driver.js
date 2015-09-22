@@ -197,7 +197,7 @@ _.extend(PollingObserveDriver.prototype, {
 
     // Run diffs.
     if (!self._stopped) {
-      LocalCollection._diffQueryChanges(
+      DiffSequence.diffQueryChanges(
         self._ordered, oldResults, newResults, self._multiplexer);
     }
 

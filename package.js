@@ -42,7 +42,8 @@ Npm.depends({
 });
 
 Package.onUse(function(api) {
-api.use(['random', 'ejson', 'json', 'underscore',  'minimongo', 'logging', 
+  api.versionsFrom('1.2');
+  api.use(['random', 'ejson', 'json', 'underscore',  'minimongo', 'logging', 
            'ddp', 'tracker', 'diff-sequence', 'mongo-id'],
           ['client', 'server']);
           
@@ -81,7 +82,7 @@ api.use(['random', 'ejson', 'json', 'underscore',  'minimongo', 'logging',
   api.addFiles('local_collection_driver.js', ['client', 'server']);
   api.addFiles('remote_collection_driver.js', 'server');
   api.addFiles('collection.js', ['client', 'server']);
-  api.versionsFrom('1.1.0.2');
+  
   
 });
 
