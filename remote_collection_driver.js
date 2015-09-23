@@ -63,9 +63,10 @@ CouchDBInternals.defaultRemoteCollectionDriver = _.once(function () {
   connectionOptions.global = true;
 
   if (! couchdbUrl) {
-    if (process.env.VCAP_SERVICES) { // are we in cloudfoundry
-      if (process.env.VCAP_SERVICES.cloudantNoSQLDB) {
-        couchdbUrl = process.env.VCAP_SERVICES.cloudantNoSQLDB[0].credentials.url;
+    if (process.env.VCAP_SERVICES) { // check if on bluemix
+      var vcap = JSON.parse(process.env.VCAP_SERVICES);
+      if (vcap.cloudantNoSQLDB) {
+        var couchdbUrl=vcap.cloudantNoSQLDB[0].credentials.url;
       }
     }
     
