@@ -169,19 +169,19 @@ CouchDBConnection.prototype.close = function() {
 };*/
 
 // Returns the CouchDB Database object; may yield. 
-CouchDBConnection.prototype._getCollection = function (collectionName) {
+CouchDBConnection.prototype.rawDatabase = function (dbName) {
   var self = this;
 
   if (! self.cloudant)
-    throw Error("_getDB called before Connection created?");
+    throw Error("rawDatabase called before Connection created?");
 
-  if (collectionName in self.Dbs) {
-     return self.Dbs[collectionName];
+  if (dbName in self.Dbs) {
+     return self.Dbs[dbName];
   }
  
    
-  self.Dbs[collectionName] = self.cloudant.use(collectionName);
-  return self.Dbs[collectionName];
+  self.Dbs[dbName] = self.cloudant.use(dbName);
+  return self.Dbs[dbName];
 };
 
 
@@ -308,7 +308,7 @@ CouchDBConnection.prototype._insert = function (collection_name, document,
   var doc = replaceTypes(document, replaceMeteorAtomWithCouchDB);
   callback = bindEnvironmentForWrite(writeCallback(write, refresh, doc, callback));
   try {
-    var collection = self._getCollection(collection_name);
+    var collection = self.rawDatabase(collection_name);
      collection.insert(doc,
                       {safe: true}, callback);
   } catch (e) {
@@ -360,7 +360,7 @@ CouchDBConnection.prototype._remove = function (collection_name, selector,
   callback = bindEnvironmentForWrite(writeCallback(write, refresh, doc, callback,true));
 
   try {
-    var collection = self._getCollection(collection_name);
+    var collection = self.rawDatabase(collection_name);
     //collection.destroy(doc._id,
     self.cloudant.request(
         { db: collection_name,
@@ -407,7 +407,7 @@ CouchDBConnection.prototype._update = function (collection_name, selector,
   var couchDBSelector = replaceTypes(selector, replaceMeteorAtomWithCouchDB);
   callback = writeCallback(write, refresh,couchDBSelector, callback, true);
   try {
-    var collection = self._getCollection(collection_name);
+    var collection = self.rawDatabase(collection_name);
     var knownId = selector._id;
 
     
@@ -569,7 +569,7 @@ CouchDBConnection.prototype._ensureIndex = function (collectionName, indexdef,
 
   // We expect this function to be called at startup, not from within a method,
   // so we don't interact with the write fence.
-  var db = self._getCollection(collectionName);
+  var db = self.rawDatabase(collectionName);
   var future = new Future;
   var idx;
   if (indexdef.constructor === Array )
@@ -590,7 +590,7 @@ CouchDBConnection.prototype._dropIndex = function (collectionName, index) {
 
   // This function is only used by test code, not within a method, so we don't
   // interact with the write fence.
-  var collection = self._getCollection(collectionName);
+  var collection = self.rawDatabase(collectionName);
  //  var future = new Future;
  //  var indexName = collection.dropIndex(index, future.resolver());
  // future.wait();
@@ -694,7 +694,7 @@ Cursor.prototype._publishCursor = function (sub) {
 // Used to guarantee that publish functions return at most one cursor per
 // collection. Private, because we might later have cursors that include
 // documents from multiple collections somehow.
-Cursor.prototype._getCollectionName = function () {
+Cursor.prototype.rawDatabase = function () {
   var self = this;
   return self._cursorDescription.collectionName;
 }
@@ -717,7 +717,7 @@ CouchDBConnection.prototype._createSynchronousCursor = function(
   options = _.pick(options || {}, 'selfForIteration', 'useTransform');
 
   
-  var collection = self._getCollection(cursorDescription.collectionName);
+  var collection = self.rawDatabase(cursorDescription.collectionName);
   var cursorOptions = cursorDescription.options;
   
   var dbCursor;
@@ -951,7 +951,7 @@ CouchDBConnection.prototype.tail = function (dbname,cursorDescription, docCallba
 
   self.initDB(dbname);
   
-  var feed = self._getCollection(dbname).follow({since: "now",include_docs:true});
+  var feed = self.rawDatabase(dbname).follow({since: "now",include_docs:true});
   var changeFuture = new Future;
   feed.on('change',function(change) {
     changeFuture['return'](change);
@@ -1198,7 +1198,7 @@ CouchDBConnection.prototype.initDB = function (dbname) {
   };
   
   while (true) {
-    self._getCollection(dbname).insert(
+    self.rawDatabase(dbname).insert(
      { updates: { lastwritewins : function(doc, req) {if (doc) { var userdoc = JSON.parse(req.body); userdoc._rev = doc._rev; return [userdoc, '1']; } else { return [null,'0'];} }, upsert : function(doc, req) {if (doc) { var userdoc = JSON.parse(req.body); userdoc._rev = doc._rev; return [userdoc, toJSON({numberAffected:1 , updatedExisting: true})]; } else { var userdoc = JSON.parse(req.body); return [userdoc,toJSON({numberAffected:1 , updatedExisting: false})];} }, rem : function(doc, req) { if (doc) { var userdoc = JSON.parse(req.body); userdoc._rev = doc._rev; userdoc._deleted = true; return [userdoc, '1']; } else { return [null,'0'];} } }}
     ,
     '_design/meteor',

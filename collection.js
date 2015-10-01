@@ -605,6 +605,18 @@ CouchDB.Database.prototype.upsert = function (selector,
               callback);
 };
 
+/**
+ * @summary Returns the [`Db`](http://) object corresponding to this database from the [npm `cloudant` module](https://www.npmjs.com/package/cloudant) which is wrapped by `CouchDB.Database`.
+ * @locus Server
+ */
+CouchDB.Database.prototype.rawDatabase = function () {
+  var self = this;
+  if (! self._collection.rawDatabase) {
+    throw new Error("Can only call rawDatabase on server collections");
+  }
+  return self._collection.rawDatabase();
+};
+
 // We'll actually design an index API later. For now, we just pass through to
 // CouchDB, but make it synchronous.
 CouchDB.Database.prototype._ensureIndex = function (index, options) {

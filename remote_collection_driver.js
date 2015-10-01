@@ -36,7 +36,7 @@ _.extend(CouchDBInternals.RemoteCollectionDriver.prototype, {
     var ret = {};
     _.each(
       ['find', 'findOne', 'insert', 'update', 'remove', '_ensureIndex', '_dropIndex',
-       'upsert'],
+       'upsert', 'rawDatabase'],
 //       
 //       , '_createCappedCollection',
  //      'dropCollection'],

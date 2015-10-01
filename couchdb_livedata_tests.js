@@ -703,6 +703,10 @@ if (Meteor.isServer) {
     var run = test.runId();
     //var coll = new CouchDB.Database("observeInCallback-"+run.toLowerCase(), collectionOptions);
     var coll = new CouchDB.Database(couchprefix + "observeincallback-"+run.toLowerCase(), collectionOptions);
+    // added test for rawDatabase
+    coll.rawDatabase().get("_design/meteor", function(err, data) {
+      test.equal(err, null);
+    });
 
     var callbackCalled = false;
     var handle = coll.find({}).observe({
