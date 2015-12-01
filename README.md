@@ -104,7 +104,11 @@ Tasks.allow({
 	- [database.upsert](#databaseupsertdoccallback)  
 	- [database.remove](#databaseremoveidcallback)  
 	- [database.allow](#databaseallowoptions)  
-	- [database.deny](#databasedenyoptions)  
+	- [database.deny](#databasedenyoptions)
+	- [database.insertAttachment](#databaseinsertattachmentdocidfilenamedatacontenttypecallback)
+	- [database.removeAttachment](#databaseremoveattachmentdocidfilenameparamscallback)
+	- [database.getAttachmentAsBuffer](#databasegetattachmentasbufferdocidfilenameparamscallback)
+	- [database.pipeAttachment](#pipeattachmentresponsedocidfilenameparamscallback)
 * [CouchDB.Cursor](#couchdbcursor)  
 	- [cursor.forEach](#cursorforeachcallbackthisarg)  
 	- [cursor.map](#cursormapcallbackthisarg)  
@@ -115,7 +119,8 @@ Tasks.allow({
 * [Query Syntax](#query-syntax)  
 	- [Selectors](#selectors)  
 	- [Sort specifiers](#sort-specifiers)  
-	- [Field Specifiers](#field-specifiers)  
+	- [Field Specifiers](#field-specifiers)
+
 		
 
 ## CouchDB.Database
@@ -281,7 +286,9 @@ Replace a document that matches the _id field. This is done on the Apache CouchD
 
 Returns 1 from the update call if successful and you don't pass a callback.
 
-You can use update to perform a upsert by setting the upsert option to true. You can also use the upsert method to perform an upsert that returns the _id of the document that was inserted (if there was one)  
+You can use update to perform a upsert by setting the upsert option to true. You can also use the upsert method to perform an upsert that returns the _id of the document that was inserted (if there was one)
+
+**NOTE:** Any update operation will overwrite / replace the existing document. To achieve the same behaviour as with the MongoDB driver, you need to manually merge the existing document with the updates.
 
 ### database.upsert(doc,[callback])
 
@@ -364,6 +371,136 @@ If you never set up any allow rules on a database then all client writes to the 
 This works just like allow, except it lets you make sure that certain writes are definitely denied, even if there is an allow rule that says that they should be permitted.
 
 When a client tries to write to a database, the Meteor server first checks the database's deny rules. If none of them return true then it checks the database's allow rules. Meteor allows the write only if no deny rules return true and at least one allow rule returns true.  
+
+### database.insertAttachment(docId,fileName,data,contentType,[callback])
+
+Adds a new attachment to the document specified by the `docId` parameter. The data should be a base64 encoded serialization of binary file.
+ The `contentType` needs to be specified and can easily be read out by the browser (client-side) or file system (server-side) packages.
+
+ This will modify the document in the following way:
+
+ ```
+ {
+   "_id": "9WXRxSgc6ng9X3jkw",
+   "_rev": "2-661b917f06fab7a50be2d6544b15e5e6",
+   // ... some other data of the document
+   // _attachments is the special field storing the attachment meta data
+   "_attachments": {
+     "someimage.jpg": {
+       "content_type": "image/jpeg",
+       "revpos": 2,
+       "digest": "md5-26LbD4nuU/SquXOlXyosmw==",
+       "length": 15360,
+       "stub": true
+     }
+   }
+ }
+ ```
+
+Attachments can only be added from the server-side. An example e.g. from inside a method looks like:
+
+```
+var databaseName = new CouchDB.Database("databasename");
+
+Meteor.methods({
+	createAttachment: function(imageData) {
+		databaseName.insertAttachment('9WXRxSgc6ng9X3jkw', 'someimage.jpg', imageData, 'image/jpeg', function(err, data) {
+			if (err) {
+				// handle error during attachment upload
+			}
+		});
+	}
+});
+```
+
+The `imageData` is the result of a `FileReader.readAsDataURL(file)` call.
+On the client-side this can be implemented e.g. in an event handler for a file input:
+
+```
+<input type="file" id="new-file"/>
+```
+
+```
+'change #new-file': function(e) {
+	var files = $('#new-file')[0].files;
+	for (var i = 0, file; file = files[i]; i++) {
+		// can be added to the server method call:
+		var fileName = file.name;
+		var type = file.type;
+
+		// create file reader and read the selected file
+		var reader = new FileReader();
+		reader.onload = function(){
+			var dataURL = reader.result;
+			Meteor.call('createAttachment', dataURL, function(err, data) {
+				// upload successful
+				$('#new-file').val('');
+			});
+		};
+		reader.readAsDataURL(file);
+	}
+}
+```
+
+### database.removeAttachment(docId,fileName,[params],[callback])
+
+Removes an attachment with a given name belonging to a given document from the database.
+For a reference of `params` see the [Cloudant driver documentation](https://github.com/apache/couchdb-nano#attachments-functions).
+
+This can only be called from server-side code.
+
+
+### database.getAttachmentAsBuffer(docId,fileName,[params],[callback])
+
+Returns the specified attachment as buffer, which can be stored on the servers file system or further processed to the client.
+
+```
+if (Meteor.isServer) {
+	// write the buffer into a local file
+	fs = Npm.require('fs');
+	databaseName.getAttachmentAsBuffer('9WXRxSgc6ng9X3jkw', 'someimage.jpg', function(err, data) {
+		// stores the file in the local file system of the server
+		fs.writeFileSync('/Users/honeybadger/someimage.jpg', data);
+	});
+
+	// server side route
+	Picker.route('/attachment/:docId/:fileName', function(params, req, res, next) {
+		var docId = params.docId;
+		var fileName = params.fileName;
+		databaseName.getAttachmentAsBuffer(docId, fileName, function(err, buffer) {
+			// write the attachment buffer into the response object
+			res.write(buffer);
+		});
+	}
+}
+```
+
+When writing the file to the file system, you need to make sure that the specified folder exists and the user running Meteor has write access to it.
+NPM `fs` doesn't automatically create directories if required.
+
+This can only be called from server-side code.
+
+### database.pipeAttachment(response,docId,fileName,[params],[callback])
+
+Pipes an attachment through to the provided response object. This is useful when accessing attachments via a route.
+
+```
+if (Meteor.isServer) {
+	// server side route
+	Picker.route('/attachment/:docId/:fileName', function(params, req, res, next) {
+		var docId = params.docId;
+		var fileName = params.fileName;
+		// loads the attachment from the database and pipes it through to the response
+		databaseName.pipeAttachent(res, docId, fileName);
+	});
+}
+```
+
+```
+<img src="/attachment/9WXRxSgc6ng9X3jkw/someimage.jpg"/>
+```
+
+This can only be called from server-side code.
 
 ## CouchDB.Cursor
 

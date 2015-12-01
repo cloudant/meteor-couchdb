@@ -1086,6 +1086,94 @@ CouchDB.Database.prototype._validatedRemove = function(userId, selector) {
   return self._collection.remove.call(self._collection, selector);
 };
 
+/*
+ * ATTACHMENT FUNCTIONS
+ */
+if (Meteor.isServer) {
+    /**
+     * Retrieves the async function from the Meteor object.
+     * @type {Function}
+     */
+    wrapAsync = (Meteor.wrapAsync) ? Meteor.wrapAsync : Meteor._wrapAsync;
+
+    /**
+     * Retrieves the raw database object from the cloudant driver.
+     * @param self - the Meteor database instance
+     * @returns {*} - the raw database object
+     */
+    function getRawDatabase(self) {
+        if (self.rawDatabase) {
+            return self.rawDatabase();
+        } else {
+            throw new Error('Error with database driver')
+        }
+    }
+
+
+    /**
+     * Retrieves the requested attachment and pipes it to the provided response object.
+     *
+     * @param docId - the _id of the document containing the attachment
+     * @param fileName - the name of the attachment
+     * @param params - any parameters/options for the get request
+     * @param callback - the callback function with 2 parameters: err (errors) and data (the binary file)
+     */
+    CouchDB.Database.prototype.pipeAttachment = function (response, docId, fileName, params, callback) {
+        var coll = getRawDatabase(this);
+        coll.attachment.get(docId, fileName, params, callback).pipe(response);
+    }
+
+    /**
+     * Retrieves the requested attachment as buffer
+     *
+     * @param docId
+     * @param fileName
+     * @param params
+     * @param callback
+     */
+    CouchDB.Database.prototype.getAttachmentAsBuffer = function (docId, fileName, params, callback) {
+        var coll = getRawDatabase(this);
+        wrapAsync(coll.attachment.get(docId, fileName, params, callback));
+    }
+
+
+    /**
+     * Creates a new inline attachment and attaches it to the provided document.
+     *
+     * @param docId
+     * @param fileName
+     * @param data - base64 encoded data of the file to upload.
+     * @param contentType
+     * @param params
+     * @param callback
+     */
+    CouchDB.Database.prototype.insertAttachment = function (docId, fileName, data, contentType, callback) {
+        var document = this.findOne(docId);
+
+        var fileData = data;
+        if (fileData.indexOf(',') >= 0) {
+            fileData = data.split(',')[1];
+        }
+
+        var coll = getRawDatabase(this);
+        wrapAsync(coll.attachment.insert(docId, fileName, new Buffer(fileData, 'base64'), contentType, { rev: document._rev }, callback));
+    }
+
+    /**
+     * Deletes an attachment of the provided document
+     *
+     * @param docId - the _id of the document the attachment is attached to
+     * @param fileName - the name of the attachment
+     * @param params - the parameters/options for the destroy query
+     * @param callback - the callback function with 2 parameters: err (errors) and data (result)
+     */
+    CouchDB.Database.prototype.removeAttachment = function (docId, fileName, params, callback) {
+        var coll = getRawDatabase(this);
+        wrapAsync(coll.attachment.destroy(docId, fileName, params, callback));
+    }
+}
+
+
 /**
  * @deprecated in 0.9.1
  */
